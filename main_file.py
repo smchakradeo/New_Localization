@@ -15,7 +15,7 @@ class main_Class(object):
         self.B = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]], float)
         self.H = np.zeros((10, 9), float)   #--
         self.Pk = np.diag([0, 0, 0, 0.01, 0.01, 0.01, 0.0, 0.0, 0.0, 0, 0, 0, 0.01, 0.01, 0.01])
-        arr = np.array([0.0001, 0.0001, 0.0001, 0, 0, 0, 0, 0, 0, 0.0001,0.0001,0.0001,0,0,0],float)
+        arr = np.array([0.0001, 0.0001, 0.0001, 0, 0, 0, 0, 0, 0, 0.0008,0.0008,0.0008,0,0,0],float)
         self.Qk = np.diag(arr)
         self.calib_result = np.array([0, 0, 0], float)
         self.ini_ori = np.identity(3)
@@ -141,10 +141,10 @@ class main_Class(object):
                 # Prediction
                 if(location):
                     self.error_states = self.error_motion_model(U_vec)
-                    #Rk = np.diag([0.001, 0.0003, 0.0003, 0.000001])  # --
+                    Rk = np.diag([0.001, 0.0006, 0.0004, 0.000001])  # --
                     prediction = self.error_observation_model_loc()
                     self.Pk = np.matmul(self.Phi, np.matmul(self.Pk, self.Phi.T)) + self.Qk
-                    Rk = (np.identity(4, float) * np.trace(np.matmul(self.H ,np.matmul(self.Pk , self.H.transpose()))))
+                    #Rk = (np.identity(4, float) * np.trace(np.matmul(self.H ,np.matmul(self.Pk , self.H.transpose()))))
                     # Correction
                     vk =  prediction - zk
                     S = (np.matmul(self.H, np.matmul(self.Pk, self.H.T))) + Rk
@@ -156,13 +156,6 @@ class main_Class(object):
                     self.x_states[0:3] = self.x_states[0:3] - output[6:9].T.flatten()
                     self.x_states[3:6] = self.x_states[3:6] - output[9:12].T.flatten()
                     dPhi = self.error_states[0:3]
-                    """dTheta = np.array([
-                        [0, dPhi[2], -dPhi[1]],
-                        [-dPhi[2], 0, dPhi[0]],
-                        [dPhi[1], -dPhi[0], 0]
-                    ], float)
-                    self.orientation = np.matmul(np.matmul((2 * np.identity(3) + dTheta), np.linalg.inv(2 * np.identity(3) - dTheta)),self.orientation)"""
-
                     Sw = quaternion.quaternion(0, -dPhi[0], -dPhi[1], -dPhi[2])
                     qdot = np.multiply((0.5 * self.quat_gy), Sw)
                     quat = np.add(self.quat_gy, (qdot ))
@@ -174,12 +167,9 @@ class main_Class(object):
                     self.error_states = np.matmul(self.error_states.T,np.diag([0.0,0.0,0.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0])).reshape(-1,1)
                 elif (gyro and acc):
                     self.error_states = self.error_motion_model(U_vec)
-                    #Rk = np.diag([0.001, 0.001, 0.001, 0.001, 0.01,0.01,0.01])  # --
-                    prediction = self.error_observation_model_gyro_acc()
-                    tmp = np.matmul(np.matmul(self.H,self.Pk),self.H.T)
-                    #Rk = np.identity(7,float) *(np.trace(tmp))
+                    Rk = np.diag([0.001, 0.0001, 0.0001, 0.0001, 0.005,0.005,0.005])  # --
                     self.Pk = np.matmul(self.Phi, np.matmul(self.Pk, self.Phi.T)) + self.Qk
-                    Rk = (np.identity(7, float) * np.trace(np.matmul(self.H, np.matmul(self.Pk, self.H.transpose()))))
+                    prediction = self.error_observation_model_gyro_acc()
                     vk = prediction - zk
                     S = (np.matmul(self.H, np.matmul(self.Pk, self.H.T))) + Rk
                     Kk = np.matmul(np.matmul(self.Pk, self.H.T), np.linalg.inv(S))
@@ -190,12 +180,6 @@ class main_Class(object):
                     self.x_states[0:3] = self.x_states[0:3] - output[6:9].T.flatten()
                     self.x_states[3:6] = self.x_states[3:6] - output[9:12].T.flatten()
                     dPhi = self.error_states[0:3]
-                    """dTheta = np.array([
-                        [0, dPhi[2], -dPhi[1]],
-                        [-dPhi[2], 0, dPhi[0]],
-                        [dPhi[1], -dPhi[0], 0]
-                    ], float)
-                    self.orientation = np.matmul(np.matmul((2 * np.identity(3) + dTheta), np.linalg.inv(2 * np.identity(3) - dTheta)),self.orientation)"""
                     Sw = quaternion.quaternion(0, -dPhi[0], -dPhi[1], -dPhi[2])
                     qdot = np.multiply((0.5 * self.quat_gy), Sw)
                     quat = np.add(self.quat_gy, (qdot))
@@ -207,10 +191,10 @@ class main_Class(object):
                     self.error_states = np.matmul(self.error_states.T, np.diag([0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0])).reshape(-1, 1)
                 elif(gyro and not acc):
                     self.error_states = self.error_motion_model(U_vec)
-                    #Rk = np.diag([0.001, 0.0001, 0.0001, 0.0001])  # --
+                    Rk = np.diag([0.001, 0.0001, 0.0001, 0.0001])  # --
                     prediction = self.error_observation_model_gyro()
                     self.Pk = np.matmul(self.Phi, np.matmul(self.Pk, self.Phi.T)) + self.Qk
-                    Rk = (np.identity(4, float) * np.trace(np.matmul(self.H, np.matmul(self.Pk, self.H.transpose()))))
+                    #Rk = (np.identity(4, float) * np.trace(np.matmul(self.H, np.matmul(self.Pk, self.H.transpose()))))
                     # Correction
                     vk = prediction - zk
                     S = (np.matmul(self.H, np.matmul(self.Pk, self.H.T))) + Rk
@@ -222,12 +206,6 @@ class main_Class(object):
                     self.x_states[0:3] = self.x_states[0:3] - output[6:9].T.flatten()
                     self.x_states[3:6] = self.x_states[3:6] - output[9:12].T.flatten()
                     dPhi = self.error_states[0:3]
-                    """dTheta = np.array([
-                        [0, dPhi[2], -dPhi[1]],
-                        [-dPhi[2], 0, dPhi[0]],
-                        [dPhi[1], -dPhi[0], 0]
-                    ], float)
-                    self.orientation = np.matmul(np.matmul((2 * np.identity(3) + dTheta), np.linalg.inv(2 * np.identity(3) - dTheta)),self.orientation)"""
                     Sw = quaternion.quaternion(0, -dPhi[0], -dPhi[1], -dPhi[2])
                     qdot = np.multiply((0.5 * self.quat_gy), Sw)
                     quat = np.add(self.quat_gy, (qdot))
@@ -239,10 +217,10 @@ class main_Class(object):
                     self.error_states = np.matmul(self.error_states.T,np.diag([0.0,0.0,0.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0])).reshape(-1,1)
                 elif(acc and not gyro):
                     self.error_states = self.error_motion_model(U_vec)
-                    #Rk = np.diag([0.001, 0.001, 0.001, 0.001])  # --
+                    Rk = np.diag([0.001, 0.005, 0.005, 0.005])  # --
                     prediction = self.error_observation_model_acc()
                     self.Pk = np.matmul(self.Phi, np.matmul(self.Pk, self.Phi.T)) + self.Qk
-                    Rk = (np.identity(4, float) * np.trace(np.matmul(self.H, np.matmul(self.Pk, self.H.transpose()))))
+                    #Rk = (np.identity(4, float) * np.trace(np.matmul(self.H, np.matmul(self.Pk, self.H.transpose()))))
                     # Correction
                     vk = prediction - zk
                     S = (np.matmul(self.H, np.matmul(self.Pk, self.H.T))) + Rk
@@ -255,12 +233,6 @@ class main_Class(object):
                     self.x_states[0:3] = self.x_states[0:3] - output[6:9].T.flatten()
                     self.x_states[3:6] = self.x_states[3:6] - output[9:12].T.flatten()
                     dPhi = self.error_states[0:3]
-                    """dTheta = np.array([
-                        [0, dPhi[2], -dPhi[1]],
-                        [-dPhi[2], 0, dPhi[0]],
-                        [dPhi[1], -dPhi[0], 0]
-                    ], float)
-                    self.orientation = np.matmul(np.matmul((2 * np.identity(3) + dTheta), np.linalg.inv(2 * np.identity(3) - dTheta)),self.orientation)"""
                     self.error_states = np.matmul(self.error_states.T, np.diag([0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0])).reshape(-1, 1)
                 """else:
                     self.error_states = self.error_motion_model(U_vec)
@@ -290,12 +262,12 @@ class main_Class(object):
                     self.error_states = np.matmul(self.error_states.T, np.diag(
                         [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0])).reshape(-1, 1)"""
 
-            print( self.x_states[0:3])
+            #print( self.x_states[0:3])
         except np.linalg.linalg.LinAlgError:
             pass
 
     def main(self):
-        f = open('C:\\Users\\smchakra\\Desktop\\Experiments\\Experiments_Python\\Parking Lot\\03_17\\Back_254\\Tri_XYZ\\Nav_vehicle_1_back.txt', 'r')
+        f = open('C:\\Users\\smchakra\\Desktop\\Experiments\\Experiments_Python\\Parking Lot\\03_17\\Walking_Right\\Tri_XYZ\\Nav_Walking_Right.txt', 'r')
         line = f.readline()
         self.time_t = float(line.split(",")[0])
         magr = np.array([float(line.split(",")[7]), float(line.split(",")[8]), float(line.split(",")[9])])
@@ -303,7 +275,7 @@ class main_Class(object):
         data = np.concatenate((accn,magr),axis=0)
         self.first_init(data,line.split(",")[0])
         sensr = sensor_fusion(self.ini_ori, self.time_t)
-        hxEst = np.array([0.0,0.0,0.0])
+        hxEst = np.array([0.0,0.0,0.0]).reshape(-1,1)
         still_time = 0.0
 
         while line:
@@ -312,15 +284,16 @@ class main_Class(object):
                 splitted = line.split(",")
                 self.time_update(float(line.split(",")[0]))
                 magr = (np.array([float(line.split(",")[7]), float(line.split(",")[8]), float(line.split(",")[9])]).reshape(-1, 1))
-                accn = ((np.array([float(line.split(",")[1]), float(line.split(",")[2]), float(line.split(",")[3])]).reshape(-1,1) - np.array([self.error_states[12][0], self.error_states[13][0], self.error_states[14][0]]).reshape(-1, 1)))
+                accn = 0.6*accn.reshape(-1,1)+0.4*((np.array([float(line.split(",")[1]), float(line.split(",")[2]), float(line.split(",")[3])]).reshape(-1,1) - np.array([self.error_states[12][0], self.error_states[13][0], self.error_states[14][0]]).reshape(-1, 1)))
                 gyro = (np.array([math.radians(float(line.split(",")[4])), math.radians(float(line.split(",")[5])),math.radians(float(line.split(",")[6]))]).reshape(-1, 1) - np.array([self.error_states[3][0], self.error_states[4][0], self.error_states[5][0]]).reshape(-1, 1))
                 U_vec = np.concatenate((gyro.T, accn.T), axis=1).flatten()
                 yaw = self.attitude_update(U_vec)
                 self.motion_model(U_vec)
                 sensr.set_angles(np.array([float(line.split(",")[1]), float(line.split(",")[2]), float(line.split(",")[3])]).reshape(-1,1), magr, self.DT)
-                #print(sensr.yaw_a)
+                print(yaw)
                 if (len(splitted)==22):
                     z = np.zeros((4,1),float)
+                    style = "x"
                     z[0][0] = sensr.yaw_a - yaw- math.radians(2)
                     loc = np.array([np.array([float(splitted[10]), float(splitted[11]),0.0])- self.x_states[0:3]])
                     z[1][0] = loc[0,0]
@@ -329,6 +302,7 @@ class main_Class(object):
                     self.kalman_filter(U_vec=U_vec, zk=z, location=True, flag=True)
                 elif(8.8<(abs(np.linalg.norm(np.array([float(line.split(",")[1]), float(line.split(",")[2]), float(line.split(",")[3])]))))<11.2and abs(np.linalg.norm(np.array([float(line.split(",")[4]), float(line.split(",")[5]), float(line.split(",")[6])])))>45 ):
                     z = np.zeros((4,1), float)
+                    style = "o"
                     z[0][0] =yaw-sensr.yaw_a- math.radians(2)
                     z[1][0] = -self.x_states[3]
                     z[2][0] = -self.x_states[4]
@@ -336,6 +310,7 @@ class main_Class(object):
                     self.kalman_filter(U_vec=U_vec,acc=True,gyro=False, zk=z, location=False, flag=True)
                 elif (abs(np.linalg.norm(np.array([float(line.split(",")[4]), float(line.split(",")[5]), float(line.split(",")[6])]))) < 45 and (8.8>(abs(np.linalg.norm(np.array([float(line.split(",")[1]), float(line.split(",")[2]), float(line.split(",")[3])])))) or (abs(np.linalg.norm(np.array([float(line.split(",")[1]), float(line.split(",")[2]), float(line.split(",")[3])]))))>11.2)):
                     z = np.zeros((4, 1), float)
+                    style = "o"
                     z[0][0] =yaw-sensr.yaw_a - math.radians(2)
                     z[1][0] =  -math.radians(float(line.split(",")[4]))
                     z[2][0] =  -math.radians(float(line.split(",")[5]))
@@ -343,6 +318,7 @@ class main_Class(object):
                     self.kalman_filter(U_vec=U_vec, acc=False,gyro=True,zk=z, location=False, flag=True)
                 elif (abs(np.linalg.norm(np.array([float(line.split(",")[4]), float(line.split(",")[5]),float(line.split(",")[6])]))) <45 and 8.8<abs(abs(np.linalg.norm(np.array([float(line.split(",")[1]), float(line.split(",")[2]), float(line.split(",")[3])])))) <11.2):
                     z = np.zeros((7, 1), float)
+                    style = "o"
                     z[0][0] =yaw-sensr.yaw_a- math.radians(2)
                     z[1][0] = -math.radians(float(line.split(",")[4]))
                     z[2][0] =- math.radians(float(line.split(",")[5]))
@@ -353,6 +329,14 @@ class main_Class(object):
                     self.kalman_filter(U_vec=U_vec, acc=True,gyro=True, zk=z, location=False, flag=True)
                 else:
                     self.kalman_filter(U_vec=U_vec,gyro=False, zk=None, location=None, flag=False)
+                    style = "o"
+                hxEst = np.hstack((hxEst, self.x_states[0:3].reshape(-1,1)))
+                plt.cla()
+                plt.scatter(hxEst[0, :].flatten(), hxEst[1, :].flatten(),marker=style)
+                plt.plot(hxEst[0, :].flatten(), hxEst[1, :].flatten(), "-k")
+                plt.axis("equal")
+                plt.grid(True)
+                plt.pause(0.001)
 
 
 obj = main_Class()
