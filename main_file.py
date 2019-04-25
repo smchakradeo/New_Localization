@@ -45,7 +45,7 @@ class main_Class(object):
         self.DT = time/1000
         self.time_t = T
 
-    def filesave(self, data_save): #File for saving the data
+    def filesave(self, data_save): #Function for saving the data
         inp1 = open("C:\\Users\\smchakra\\Desktop\\Experiments\\Experiments_Python\\Construction site\\Experiment_4\\Tri\\Data.txt", "a+")
         inp1.write(data_save)
         inp1.write("\n")
@@ -147,7 +147,7 @@ class main_Class(object):
                     self.error_states = self.error_motion_model(U_vec)
                     #Rk = (np.identity(4, float) * np.trace(np.matmul(self.H ,np.matmul(self.Pk , self.H.transpose())))) # For dynamic update of Rk
                     #Rk = np.diag([0.01, 0.001, 0.001, 0.001])  # For magnetometer + location
-                    Rk = np.diag([0.005, 0.005, 0.005])  # Measurement noise covariance
+                    Rk = np.diag([0.001, 0.001, 0.001])  # Measurement noise covariance
                     prediction = self.error_observation_model_loc()
                     self.Pk = np.matmul(self.Phi, np.matmul(self.Pk, self.Phi.T)) + self.Qk
                     # Correction
